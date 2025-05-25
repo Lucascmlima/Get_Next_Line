@@ -1,0 +1,10 @@
+{
+	"files.associations": {
+		"unistd.h": "c",
+		"get_next_line.h": "c",
+		"functional": "c",
+		"stdio.h": "c",
+		"stdlib.h": "c",
+		"random": "c"
+	}
+}

@@ -6,108 +6,150 @@
 /*   By: lcarvalh <lcarvalh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/09 17:48:28 by lcarvalh          #+#    #+#             */
-/*   Updated: 2025/05/10 22:20:00 by lcarvalh         ###   ########.fr       */
+/*   Updated: 2025/05/25 16:45:44 by lcarvalh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-void	polish_list(t_list **list)
-{
-	t_list	*last_node;
-	t_list	*clean_node;
-	int		i;
-	int		k;
-	char	*buf;
-
-	buf = malloc(BUFFER_SIZE + 1);
-	clean_node = malloc(sizeof(t_list));
-	if (NULL == buf || NULL == clean_node)
-		return ;
-	last_node = find_last_node(*list);
-	i = 0;
-	k = 0;
-	while (last_node->str_buf[i] && last_node->str_buf[i] != '\n')
-		++i;
-	while (last_node->str_buf[i] && last_node->str_buf[++i])
-		buf[k++] = last_node->str_buf[i];
-	buf[k] = '\0';
-	clean_node->str_buf = buf;
-	clean_node->next = NULL;
-	dealloc(list, clean_node, buf);
-}
-
-char	*get_line(t_list *list)
-{
-	int		str_len;
-	char	*next_str;
-
-	if (NULL == list)
-		return (NULL);
-	str_len = len_to_newline(list);
-	next_str = malloc(str_len + 1);
-	if (NULL == next_str)
-		return (NULL);
-	copy_str(list, next_str);
-	return (next_str);
-}
-
-void	append(t_list **list, char *buf)
-{
-	t_list	*new_node;
-	t_list	*last_node;
-
-	last_node = find_last_node(*list);
-	new_node = malloc(sizeof(t_list));
-	if (NULL == new_node)
-		return ;
-	if (NULL == last_node)
-		*list = new_node;
-	else
-		last_node->next = new_node;
-	new_node->str_buf = buf;
-	new_node->next = NULL;
-}
-
-void	create_list(t_list **list, int fd)
-{
-	int		char_read;
-	char	*buf;
-
-	while (!found_newline(*list))
-	{
-		buf = malloc(BUFFER_SIZE + 1);
-		if (NULL == buf)
-			return ;
-		char_read = read(fd, buf, BUFFER_SIZE);
-		if (!char_read)
-		{
-			free(buf);
-			return ;
-		}
-		buf[char_read] = '\0';
-		append(list, buf);
-	}
-}
-
 char	*get_next_line(int fd)
 {
-	static t_list	*list = NULL;
-	char			*next_line;
+	char		*buf;
+	static char	*stash;
+	char		*line;
+	ssize_t		readed;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, &next_line, 0) < 0)
+	buf = malloc(BUFFER_SIZE + 1);
+	if (!buf || fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	create_list(&list, fd);
-	if (list == NULL)
-		return (NULL);
-	next_line = get_line(list);
-	polish_list(&list);
-	return (next_line);
+	readed = 1;
+	while (!ft_strchr(stash, '\n') && readed > 0)
+	{
+		readed = read(fd, buf, BUFFER_SIZE);
+		if (readed == -1)
+		{
+			free(buf);
+			return (NULL);
+		}
+		buf[readed] = '\0';
+		stash = ft_strjoin_and_free(stash, buf);
+	}
+	free(buf);
+	line = get_line_from_stash(stash);
+	stash = clean_stash(stash);
+	return (line);
 }
 
-// while (gnl.tmp)
+
+char	*ft_strjoin_and_free(char *stash, char *buf)
+{
+	char	*new_str;
+
+	if (!buf)
+		return (NULL);
+	if (!stash)
+		return (ft_strdup(buf));
+	new_str = ft_strjoin(stash, buf);
+	free(stash);
+	return (new_str);
+}
+char	*get_line_from_stash(char *stash)
+{
+	size_t	i;
+	char	*res;
+
+	if (!stash || !*stash)
+		return (NULL);
+	i = 0;
+	while (stash[i] && stash[i] != '\n')
+		i++;
+	if (stash[i] == '\n')
+		i++;
+	res = malloc(i + 1);
+	if (!res)
+		return (NULL);
+	i = 0;
+	while (stash[i] && stash[i] != '\n')
+	{
+		res[i] = stash[i];
+		i++;
+	}
+	if (stash[i] == '\n')
+		res[i++] = '\n';
+	res[i] = '\0';
+	return (res);
+}
+
+char	*read_and_stash(int fd, char *stash)
+{
+	char	*buf;
+	ssize_t	bytes_read;
+
+	buf = malloc(BUFFER_SIZE + 1);
+	if (!buf)
+		return (NULL);
+	bytes_read = 1;
+	while (!ft_strchr(stash, '\n') && bytes_read > 0)
+	{
+		bytes_read = read(fd, buf, BUFFER_SIZE);
+		if (bytes_read == -1)
+		{
+			free(buf);
+			return (NULL);
+		}
+		buf[bytes_read] = '\0';
+		stash = ft_strjoin_and_free(stash, buf);
+		if (!stash)
+		{
+			free(buf);
+			return (NULL);
+		}
+	}
+	free(buf);
+	return (stash);
+}
+char	*clean_stash(char *stash)
+{
+	size_t	i;
+	char	*clean;
+
+	if (!stash)
+		return (NULL);
+	i = 0;
+	while (stash[i] && stash[i] != '\n')
+		i++;
+	if (!stash[i])
+	{
+		free(stash);
+		return (NULL);
+	}
+	clean = ft_substr(stash, i + 1, ft_strlen(stash) - i - 1);
+	free(stash);
+	return (clean);
+}
+
+// char	*update_stash(char *stash)
 // {
-// 	printf("Bloco %d: %s\n", gnl.i, (char *)gnl.tmp->content);
-// 	gnl.tmp = gnl.tmp->next;
-// 	gnl.i++;
+// 	size_t	i;
+// 	size_t	j;
+// 	char	*new_stash;
+
+// 	i = 0;
+// 	while (stash[i] && stash[i] != '\n')
+// 		i++;
+// 	if (!stash[i])
+// 	{
+// 		free(stash);
+// 		return (NULL);
+// 	}
+// 	new_stash = malloc(ft_strlen(stash) - i);
+// 	if (!new_stash)
+// 		return (NULL);
+// 	i++;
+// 	j = 0;
+// 	while (stash[i])
+// 		new_stash[j++] = stash[i++];
+// 	new_stash[j] = '\0';
+// 	free(stash);
+// 	return (new_stash);
 // }

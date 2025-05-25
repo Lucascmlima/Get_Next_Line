@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: lcarvalh <lcarvalh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/10 14:29:14 by lcarvalh          #+#    #+#             */
-/*   Updated: 2025/05/25 16:45:36 by lcarvalh         ###   ########.fr       */
+/*   Created: 2025/05/09 18:01:23 by lcarvalh          #+#    #+#             */
+/*   Updated: 2025/05/25 18:43:13 by lcarvalh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,20 +14,19 @@
 # define GET_NEXT_LINE_H
 
 # ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 42
+#  define BUFFER_SIZE 5
 # endif
 
+# include <limits.h>
+# include <fcntl.h>
+# include <stdio.h>
 # include <stdlib.h>
 # include <unistd.h>
 
 char	*get_next_line(int fd);
-char	*ft_strchr(const char *s, int c);
-char	*ft_strdup(const char *s1);
-char	*ft_strjoin(char const *s1, char const *s2);
-char	*ft_strjoin_and_free(char *stash, char *buf);
-char	*ft_substr(char const *s, unsigned int start, size_t len);
-char	*get_line_from_stash(char *stash);
-char	*clean_stash(char *stash);
-size_t	ft_strlen(const char *s);
+void	cleanse(char *buffer);
+int		new_line(char *output_line);
+char	*copy_to_line(char *output_line, char *buffer);
+size_t	ft_strlen(char *s);
 
 #endif
