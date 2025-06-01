@@ -6,7 +6,7 @@
 /*   By: lcarvalh <lcarvalh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/09 18:01:23 by lcarvalh          #+#    #+#             */
-/*   Updated: 2025/05/28 18:37:14 by lcarvalh         ###   ########.fr       */
+/*   Updated: 2025/06/01 16:34:48 by lcarvalh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,6 @@ char	*ft_strjoin(char *line, char *buffer)
 	if (!newline)
 	{
 		free(line);
-		free(buffer);
-		free(newline);
 		return (NULL);
 	}
 	ptr = newline;
